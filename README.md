@@ -2,7 +2,7 @@
 
 This pre-initialized project has everything needed to work with TypeScript, Express, and Rest.
 
-Each step of its configuration has already been completed previously in the course, so you only need to clone the project and start working.
+Each step of its configuration has already been completed, so you only need to clone the project and start working.
 
 
 ## Installation
