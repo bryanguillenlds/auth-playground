@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import { RegisterUserDto } from "../../domain/dtos/auth/register-user.dto";
 import { AuthService } from "../services/auth.service";
 import { CustomError } from "../../domain/errors/custom.error";
+import { RegisterUserDto, LoginUserDto } from "../../domain";
 
 export class AuthController {
   // DEPENDENCY INJECTION of the AuthService
@@ -32,7 +32,17 @@ export class AuthController {
   };
 
   loginUser = async (req: Request, res: Response) => {
-    res.json("loginUser");
+    const [errorMessage, loginUserDto] = LoginUserDto.create(req.body);
+
+    if (errorMessage) return res.status(400).json({ error: errorMessage });
+
+    try {
+      const user = await this.authService.loginUser(loginUserDto!);
+
+      res.json(user);
+    } catch (error) {
+      this.handleError(res, error);
+    }
   };
 
   validateEmail = async (req: Request, res: Response) => {

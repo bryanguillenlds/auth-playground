@@ -2,6 +2,8 @@ import { RegisterUserDto } from "../../domain/dtos/auth/register-user.dto";
 import { UserModel } from "../../data/mongo/models/user.model";
 import { CustomError } from "../../domain/errors/custom.error";
 import { UserEntity } from "../../domain/entities/user.entity";
+import { bcryptAdapter } from "../../config";
+import { LoginUserDto } from "../../domain/dtos/auth/login-user.dto";
 
 export class AuthService {
   constructor() {}
@@ -16,9 +18,11 @@ export class AuthService {
 
     try {
       const user = new UserModel(registerUserDto);
-      await user.save();
 
-      // TODO: Encrypt password, email validation and generate JWT for authentication
+      // Set the existing password field to be the hashed password
+      user.password = await bcryptAdapter.hash(registerUserDto.password);
+
+      await user.save();
 
       const { password, ...userEntity } = UserEntity.fromObject(user);
 
@@ -26,5 +30,25 @@ export class AuthService {
     } catch (error) {
       throw CustomError.internalServerError(`${error}`);
     }
+  };
+
+  loginUser = async (loginUserDto: LoginUserDto) => {
+    const existingUser = await UserModel.findOne({
+      email: loginUserDto.email,
+    });
+
+    if (!existingUser)
+      throw CustomError.badRequest("User with this email does not exist");
+
+    const isPasswordValid = await bcryptAdapter.compare(
+      loginUserDto.password,
+      existingUser.password
+    );
+
+    if (!isPasswordValid) throw CustomError.badRequest("Invalid password");
+
+    const { password, ...userEntity } = UserEntity.fromObject(existingUser);
+
+    return { user: userEntity, token: "ABC" };
   };
 }
