@@ -4,6 +4,7 @@ import { CustomError } from "../../domain/errors/custom.error";
 import { UserEntity } from "../../domain/entities/user.entity";
 import { bcryptAdapter } from "../../config";
 import { LoginUserDto } from "../../domain/dtos/auth/login-user.dto";
+import { JWTAdapter } from "../../config";
 
 export class AuthService {
   constructor() {}
@@ -49,6 +50,13 @@ export class AuthService {
 
     const { password, ...userEntity } = UserEntity.fromObject(existingUser);
 
-    return { user: userEntity, token: "ABC" };
+    const token = await JWTAdapter.generateToken({
+      id: existingUser.id,
+      email: existingUser.email,
+    });
+
+    if (!token) throw CustomError.internalServerError('Error Generating Token');
+
+    return { user: userEntity, token };
   };
 }
